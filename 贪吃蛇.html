@@ -4,34 +4,51 @@
   <meta charset="utf-8" />
   <title>卡通风格贪吃蛇</title>
   <style>
-    body { display:flex; align-items:center; justify-content:center; height:100vh; margin:0; background:#87CEEB; color:#222; font-family:Arial, sans-serif; }
-    #wrap { position:relative; }
-    #game { background:transparent; box-shadow:0 8px 30px rgba(0,0,0,0.5); border-radius:8px; display:block; }
+    body { display:flex; align-items:center; justify-content:center; height:100vh; margin:0; background:linear-gradient(135deg, #87CEEB 0%, #A0E9FF 50%, #D6F7E8 100%); color:#222; font-family:'Segoe UI', Arial, sans-serif; overflow:hidden; }
+    #wrap { position:relative; display:flex; flex-direction:column; align-items:center; }
+    #game { background:transparent; box-shadow:0 8px 30px rgba(0,0,0,0.3); border-radius:12px; display:block; }
     .info { position: absolute; top: 12px; left: 12px; color:#fff; font-size:14px; text-shadow:0 1px 0 rgba(0,0,0,0.4); user-select:none; }
-    .footer { position:fixed; bottom:10px; left:10px; color:#222; font-size:13px; }
+    .score-board { position:absolute; top: 12px; right: 12px; display:flex; flex-direction:column; gap:4px; user-select:none; }
+    .score-item { background:rgba(255,255,255,0.9); padding:6px 12px; border-radius:6px; font-weight:bold; font-size:14px; box-shadow:0 2px 8px rgba(0,0,0,0.15); }
+    .score-label { color:#666; font-size:10px; text-transform:uppercase; letter-spacing:1px; }
+    .score-value { color:#27ae60; font-size:18px; }
+    .high-score-value { color:#f39c12; }
+    .footer { position:fixed; bottom:15px; left:50%; transform:translateX(-50%); color:#555; font-size:13px; background:rgba(255,255,255,0.7); padding:8px 20px; border-radius:20px; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
   <div id="wrap">
     <div class="info">按方向键移动 • 空格重启</div>
+    <div class="score-board">
+      <div class="score-item">
+        <div class="score-label">当前分数</div>
+        <div class="score-value" id="score">0</div>
+      </div>
+      <div class="score-item">
+        <div class="score-label">最高分</div>
+        <div class="high-score-value" id="highScore">0</div>
+      </div>
+    </div>
     <canvas id="game" width="400" height="400"></canvas>
   </div>
-  <div class="footer">Score: <span id="score">0</span></div>
+  <div class="footer">食物3秒后消失 • 金色食物双倍分 • 蓝色食物加速</div>
 
 <script>
 (() => {
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
   const scoreEl = document.getElementById('score');
+  const highScoreEl = document.getElementById('highScore');
 
-  const TILE = 20; // 格子大小（像素）
+  const TILE = 20;
   const COLS = canvas.width / TILE;
   const ROWS = canvas.height / TILE;
 
-  // Game state
-  let snake, dir, nextDir, food, running, score, speed, timerId;
+  const FOOD_LIFETIME = 3000;
+  const MAX_FOOD_COUNT = 3;
 
-  // Background state (cartoon)
+  let snake, dir, nextDir, foods, running, score, highScore, speed, timerId, foodTimers;
+
   let clouds = [];
   const cloudCount = 5;
   let bgSeed = Math.random()*1000;
@@ -52,23 +69,70 @@
     snake = [{x: Math.floor(COLS/2), y: Math.floor(ROWS/2)}];
     dir = {x: 1, y: 0};
     nextDir = dir;
-    placeFood();
+    foods = [];
+    foodTimers = [];
     running = true;
     score = 0;
+    highScore = parseInt(localStorage.getItem('snakeHighScore') || '0');
     speed = 120;
     scoreEl.textContent = score;
+    highScoreEl.textContent = highScore;
     if (timerId) clearInterval(timerId);
+    clearAllFoodTimers();
     timerId = setInterval(tick, speed);
+    generateFood();
     resetBackground();
   }
 
-  function placeFood() {
-    while (true) {
+  function clearAllFoodTimers() {
+    foodTimers.forEach(timer => clearTimeout(timer));
+    foodTimers = [];
+  }
+
+  function getRandomFoodType() {
+    const rand = Math.random();
+    if (rand < 0.15) return 'gold';
+    if (rand < 0.30) return 'blue';
+    return 'normal';
+  }
+
+  function generateFood() {
+    if (!running) return;
+    if (foods.length >= MAX_FOOD_COUNT) return;
+
+    let attempts = 0;
+    while (attempts < 50) {
+      attempts++;
       const pos = { x: Math.floor(Math.random()*COLS), y: Math.floor(Math.random()*ROWS) };
-      if (!snake.some(s => s.x === pos.x && s.y === pos.y)) {
-        food = pos;
+      
+      if (!snake.some(s => s.x === pos.x && s.y === pos.y) &&
+          !foods.some(f => f.x === pos.x && f.y === pos.y)) {
+        
+        const type = getRandomFoodType();
+        const food = {
+          x: pos.x,
+          y: pos.y,
+          type: type,
+          spawnTime: Date.now()
+        };
+        foods.push(food);
+
+        const timer = setTimeout(() => {
+          removeFood(food);
+          if (running && foods.length < MAX_FOOD_COUNT) {
+            generateFood();
+          }
+        }, FOOD_LIFETIME);
+        foodTimers.push(timer);
         return;
       }
+    }
+  }
+
+  function removeFood(targetFood) {
+    const index = foods.findIndex(f => f === targetFood);
+    if (index !== -1) {
+      foods.splice(index, 1);
     }
   }
 
