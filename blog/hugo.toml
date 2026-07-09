@@ -1,10 +1,37 @@
-baseURL = 'https://bistu-ossdt-2026.github.io/Thegame/'
-languageCode = 'en-us'
-title = 'My New Hugo Project'
-theme = 'ananke'
-buildDrafts = false
+name: Deploy Hugo site to GitHub Pages
 
-[params]
-  description = "A Hugo blog powered by Ananke theme"
-  # 如果你有自定义域名，在这里设置
-  # custom_css = ["css/custom.css"]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: 'latest'
+
+      - name: Build
+        working-directory: ./blog
+        run: hugo --minify
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./blog/public
