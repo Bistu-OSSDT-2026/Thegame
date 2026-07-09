@@ -1,4 +1,10 @@
-baseURL = 'https://example.org/'
+baseURL = 'https://bistu-ossdt-2026.github.io/Thegame/'
 languageCode = 'en-us'
 title = 'My New Hugo Project'
 theme = 'ananke'
+buildDrafts = false
+
+[params]
+  description = "A Hugo blog powered by Ananke theme"
+  # 如果你有自定义域名，在这里设置
+  # custom_css = ["css/custom.css"]
