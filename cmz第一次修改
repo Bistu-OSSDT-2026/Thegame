@@ -93,35 +93,42 @@ background-image: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)),
   	const ROWS = canvas.height / TILE;  // 计算一共有多少行格子 (600 / 20 = 30行)
 
 	// 游戏运行时状态变量定义
-  	let snake;                // 蛇身数组，存储每一节的坐标对象，形如：[{x:15, y:15}, {x:14, y:15}]
-  	let dir;                  // 当前这一帧蛇正在移动的方向向量，例：向右为 {x:1, y:0}
-  	let nextDir;              // 玩家通过键盘按下的下一个方向向量，将在下一帧(tick)被消化
-  	let food;                 // 食物的坐标对象，形如：{x: 5, y: 10}
-  	let running;              // 游戏运行总开关：true 代表游戏进行中/暂停，false 代表游戏结束 Game Over
-  	let isPaused = false;     // 游戏暂停状态：true 代表当前被空格键暂停了
-  	let score;                // 玩家当前得分
-  	let speed;                // 游戏核心定时器的帧间隔时间（单位：毫秒，数值越小蛇跑得越快）
-  	let timerId;              // 存储 setInterval 返回的定时器 ID，用于清除和重启循环
-  	let turnActionValid = true; 
+  	let snake;                  // 蛇身数组，存储每一节的坐标对象，形如：[{x:15, y:15}, {x:14, y:15}]
+  	let dir;                    // 当前这一帧蛇正在移动的方向向量，例：向右为 {x:1, y:0}
+  	let nextDir;                // 玩家通过键盘按下的下一个方向向量，将在下一帧(tick)被消化
+  	let food;                   // 食物的坐标对象，形如：{x: 5, y: 10}
+  	let running;                // 游戏运行总开关：true 代表游戏进行中/暂停，false 代表游戏结束 Game Over
+  	let isPaused = false;       // 游戏暂停状态：true 代表当前被空格键暂停了
+  	let score;                  // 玩家当前得分
+  	let speed;                  // 游戏核心定时器的帧间隔时间（单位：毫秒，数值越小蛇跑得越快）
+  	let timerId;                // 存储 setInterval 返回的定时器 ID，用于清除和重启循环
+  	let turnActionValid = true; // 按键锁/转向标志位：在一帧内如果已经改过方向，设为 false，防止极限手速下快速按键导致的“自撞” Bug
 
-  function reset() {
+/**
+   * 游戏重置与初始化函数
+   * 负责清空状态、生成长身体的蛇、重置分数、启动定时器
+   */
+function reset() {
+	// 1. 计算画布正中心点的坐标，作为初始蛇头位置
     const headX = Math.floor(COLS / 2);
     const headY = Math.floor(ROWS / 2);
+	// 2. 初始化蛇身：默认生成 4 个节长（1个蛇头 + 3个身体）。x 坐标依次递减，使其横向在中间排开
     snake = [
-      { x: headX,     y: headY }, 
-      { x: headX - 1, y: headY }, 
-      { x: headX - 2, y: headY }, 
-      { x: headX - 3, y: headY } 
+      { x: headX,     y: headY }, // 蛇头坐标
+      { x: headX - 1, y: headY }, // 身体节1
+      { x: headX - 2, y: headY }, // 身体节2
+      { x: headX - 3, y: headY }  // 身体节3
     ];
-    dir = {x: 1, y: 0};
-    nextDir = dir;
-    placeFood();
-    running = true;
-    isPaused = false;
-    score = 0;
-    speed = 120;
-    scoreEl.textContent = score;
-    startTimer();
+
+    dir = {x: 1, y: 0};             // 默认初始移动方向：向右
+    nextDir = dir;					// 下一帧方向同步初始化
+    placeFood();					// 在地图上随机投放第一个食物
+    running = true;					// 启动运行状态
+    isPaused = false;				// 确保没有处于暂停
+    score = 0;						// 分数归零
+    speed = 120;					// 初始移动延迟定为 120 毫秒一次
+    scoreEl.textContent = score;    // 更新页面上显示的数字
+    startTimer();					// 开启游戏主循环时钟
   }
 
   function startTimer() {
