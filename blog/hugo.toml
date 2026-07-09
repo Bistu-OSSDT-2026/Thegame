@@ -1,4 +1,5 @@
 baseURL = 'https://bistu-ossdt-2026.github.io/Thegame/'
-languageCode = 'en-us'
-title = 'My New Hugo Project'
+languageCode = 'zh-cn'    # 1. 这里从 en-us 改为 zh-cn (简体中文)
+title = '我的技术博客'      # 2. 这里把标题改成中文
 theme = 'ananke'
+defaultContentLanguage = 'zh' # 3. 确保默认语言是中文
