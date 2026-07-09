@@ -7,7 +7,6 @@
     body { display:flex; align-items:center; justify-content:center; height:100vh; margin:0; background:#87CEEB; color:#222; font-family:Arial, sans-serif; }
     #wrap { display:flex; flex-direction:column; align-items:center; gap: 15px; position:relative; }
     
-    /* 1. 将提示词移到地图外面，并美化为卡通小卡片样式 */
     .info { 
       background: rgba(255, 255, 255, 0.85); 
       color: #2c3e50; 
@@ -312,14 +311,16 @@
       ctx.beginPath(); ctx.ellipse(fx+TILE*0.7, fy+TILE*0.35, TILE*0.12, TILE*0.08, 0, 0, Math.PI*2); ctx.fill();
     }
 
+    // 蛇的绘制
     for (let i=snake.length-1;i>=0;i--) {
       const s = snake[i];
       const sx = s.x * TILE;
       const sy = s.y * TILE;
       if (i === 0) {
+        // 蛇头采用亮粉色渐变（从浅粉到经典的Barbie亮粉）
         const grad = ctx.createLinearGradient(sx, sy, sx+TILE, sy+TILE);
-        grad.addColorStop(0, '#7EE6A9');
-        grad.addColorStop(1, '#2ECC71');
+        grad.addColorStop(0, '#FF85C0'); // 稍微浅一点的粉
+        grad.addColorStop(1, '#FF2A93'); // 浓烈的亮粉
         ctx.fillStyle = grad;
         roundRectFill(sx+1, sy+1, TILE-2, TILE-2, 6);
 
@@ -334,7 +335,8 @@
         ctx.fillStyle = '#1b1b1b';
         ctx.beginPath(); ctx.ellipse(sx+eyeOffsetX + (dir.x*1), sy+eyeOffsetY + (dir.y*1), TILE*0.05, TILE*0.07, 0, 0, Math.PI*2); ctx.fill();
       } else {
-        ctx.fillStyle = i%2 ? '#27ae60' : '#2ecc71';
+        // 蛇身深浅交替：单数节点用深玫红粉，双数节点用标准亮粉
+        ctx.fillStyle = i%2 ? '#E91E63' : '#FF69B4';
         roundRectFill(sx+2, sy+2, TILE-4, TILE-4, 5);
       }
     }
